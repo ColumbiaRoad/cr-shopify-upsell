@@ -5,7 +5,7 @@ type fixture struct {
 }
 
 func setTestFixture() *fixture {
-	srv := New()
+	srv := New("", "", "")
 	srv.Routes()
 	return &fixture{
 		api: srv,
