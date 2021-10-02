@@ -1,6 +1,7 @@
 .idea
 **/gin-bin
 *.http
+*/.env
 .DS_Store
 # generated swagger docs
 */api/docs/swagger.*
