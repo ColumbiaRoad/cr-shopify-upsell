@@ -37,7 +37,7 @@ func New(apiKey, apiSecret, redirectUrl string) *Server {
 		ApiKey:      apiKey,
 		ApiSecret:   apiSecret,
 		RedirectUrl: redirectUrl,
-		Scope:       "read_products,read_orders",
+		Scope:       "read_products,write_products,read_orders",
 	}
 	return &Server{
 		Server:  server.New(),

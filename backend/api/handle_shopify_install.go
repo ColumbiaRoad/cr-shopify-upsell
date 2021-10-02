@@ -1,7 +1,10 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
+
+	goshopify "github.com/bold-commerce/go-shopify"
 
 	"github.com/labstack/gommon/log"
 
@@ -40,15 +43,34 @@ func (s *Server) handleCallback() echo.HandlerFunc {
 		ctx := c.Request().Context()
 		shopURL := c.QueryParams().Get("shop")
 		code := c.QueryParams().Get("code")
-		access_token, err := s.Shopify.GetAccessToken(shopURL, code)
+		accessToken, err := s.Shopify.GetAccessToken(shopURL, code)
 		if err != nil {
-			log.Warnf("failed to get token: %s", access_token)
+			log.Warnf("failed to get token: %s", accessToken)
 			return s.Respond(c, http.StatusBadRequest, ErrorResponse{Error: "failed to get token"})
 		}
-		merchantID, err := s.Merchant.HandleInstall(ctx, shopURL, access_token)
+		merchantID, err := s.Merchant.HandleInstall(ctx, shopURL, accessToken)
 		if err != nil {
 			return s.Respond(c, http.StatusBadRequest, ErrorResponse{Error: "failed to create merchant"})
 		}
+		client := goshopify.NewClient(*s.Shopify, shopURL, accessToken)
+
+		p := goshopify.Product{
+			Vendor:   "Compensate",
+			Title:    "Carbon offset",
+			BodyHTML: "Help fight climate change by donating a small amount of money to the Compensate non-profit climate fund",
+		}
+
+		product, err := client.Product.Create(p)
+		if err != nil {
+			log.Warn(err)
+			return s.Respond(c, http.StatusInternalServerError, ErrorResponse{Error: "failed to create product cariant"})
+		}
+		merchantID, err = s.Merchant.AddVariantID(ctx, shopURL, product.ID)
+		if err != nil {
+			log.Warn(err)
+			return s.Respond(c, http.StatusInternalServerError, ErrorResponse{Error: "failed to persist product variant"})
+		}
+		fmt.Println("My produist", product, merchantID)
 		// TODO: render the admin template
 		log.Warn("merchant id ", merchantID)
 		return s.Respond(c, http.StatusOK, ErrorResponse{Error: " Looks good to me!"})
