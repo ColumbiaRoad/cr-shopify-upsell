@@ -19,4 +19,5 @@ func (s *Server) Routes() {
 	// Swagger docs
 	v1.GET("/docs/*", echoSwagger.WrapHandler)
 	v1.GET("/shopify/", s.handleInstall())
+	v1.GET("/shopify/callback", s.handleCallback())
 }

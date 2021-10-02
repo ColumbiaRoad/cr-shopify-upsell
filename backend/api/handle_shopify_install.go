@@ -1,30 +1,51 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
+
+	"github.com/labstack/gommon/log"
 
 	"github.com/labstack/echo/v4"
 )
 
-// InstallResponse is returned by the health check
-type InstallResponse struct {
-	Msg string `json:"message"`
-}
-
 // @Summary Shopify Oauth install endpoint
 // @Description This is the starting point of the app install flow
-// @Accept json
-// @Produce json
-// @Success 200 {object} InstallResponse "ok"
-// @Router /v1/install [get]
+// @Accept html
+// @Produce html
+// @Success 302
+// @Router /v1/shopify/ [get]
 // @Tags shopify
 func (s *Server) handleInstall() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		shopName := c.QueryParams().Get("shop")
 		state := "nonce"
-		authUrl := s.App.AuthorizeUrl(shopName, state)
-		fmt.Println("sssss", authUrl)
+		authUrl := s.Shopify.AuthorizeUrl(shopName, state)
 		return s.Redirect(c, http.StatusFound, authUrl)
+	}
+}
+
+// @Summary Shopify Callback handler
+// @Description This is the starting point of the app install flow
+// @Accept html
+// @Produce html
+// @Success 200
+// @Router /v1/shopify/callback [get]
+// @Tags shopify
+func (s *Server) handleCallback() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if ok, _ := s.Shopify.VerifyAuthorizationURL(c.Request().URL); !ok {
+			log.Warn("failed to validate signature")
+			return s.Respond(c, http.StatusUnauthorized, ErrorResponse{Error: "invalid Signature"})
+		}
+		shopName := c.QueryParams().Get("shop")
+		code := c.QueryParams().Get("code")
+		token, err := s.Shopify.GetAccessToken(shopName, code)
+		if err != nil {
+			log.Warnf("failed to get token: %s", token)
+			return s.Respond(c, http.StatusBadRequest, ErrorResponse{Error: "failed to get token"})
+		}
+		// TODO: Persist the token and the merchant
+		// TODO: render the admin template
+		return s.Respond(c, http.StatusOK, ErrorResponse{Error: "Looks good to me!" + token})
 	}
 }

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/ColumbiaRoad/cr-shopify-upsell/backend/app/merchant"
 	"github.com/ColumbiaRoad/cr-shopify-upsell/backend/lib/server"
 	goshopify "github.com/bold-commerce/go-shopify"
 )
@@ -19,7 +20,8 @@ type SuccessResponse struct {
 // this is where you would add your "app's" which has the business logic
 type Server struct {
 	*server.Server
-	*goshopify.App
+	Shopify  *goshopify.App
+	Merchant merchant.Merchants
 }
 
 // New creates a new Server with an HTTP Router
@@ -38,7 +40,7 @@ func New(apiKey, apiSecret, redirectUrl string) *Server {
 		Scope:       "read_products,read_orders",
 	}
 	return &Server{
-		Server: server.New(),
-		App:    &app,
+		Server:  server.New(),
+		Shopify: &app,
 	}
 }
