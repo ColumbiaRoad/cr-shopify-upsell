@@ -37,15 +37,20 @@ func (s *Server) handleCallback() echo.HandlerFunc {
 			log.Warn("failed to validate signature")
 			return s.Respond(c, http.StatusUnauthorized, ErrorResponse{Error: "invalid Signature"})
 		}
-		shopName := c.QueryParams().Get("shop")
+		ctx := c.Request().Context()
+		shopURL := c.QueryParams().Get("shop")
 		code := c.QueryParams().Get("code")
-		token, err := s.Shopify.GetAccessToken(shopName, code)
+		access_token, err := s.Shopify.GetAccessToken(shopURL, code)
 		if err != nil {
-			log.Warnf("failed to get token: %s", token)
+			log.Warnf("failed to get token: %s", access_token)
 			return s.Respond(c, http.StatusBadRequest, ErrorResponse{Error: "failed to get token"})
 		}
-		// TODO: Persist the token and the merchant
+		merchantID, err := s.Merchant.HandleInstall(ctx, shopURL, access_token)
+		if err != nil {
+			return s.Respond(c, http.StatusBadRequest, ErrorResponse{Error: "failed to create merchant"})
+		}
 		// TODO: render the admin template
-		return s.Respond(c, http.StatusOK, ErrorResponse{Error: "Looks good to me!" + token})
+		log.Warn("merchant id ", merchantID)
+		return s.Respond(c, http.StatusOK, ErrorResponse{Error: " Looks good to me!"})
 	}
 }
