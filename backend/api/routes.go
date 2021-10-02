@@ -2,7 +2,6 @@ package api
 
 import (
 	_ "github.com/ColumbiaRoad/cr-shopify-upsell/backend/api/docs"
-
 	"github.com/labstack/echo/v4/middleware"
 
 	echoSwagger "github.com/swaggo/echo-swagger"
@@ -14,7 +13,6 @@ func (s *Server) Routes() {
 	s.Router.Use(middleware.CORS())
 	s.Router.GET("/health", s.handleHealth())
 	v1 := s.Router.Group("/v1")
-
 	// Swagger docs
 	v1.GET("/docs/*", echoSwagger.WrapHandler)
 	v1.GET("/shopify/", s.handleInstall())
