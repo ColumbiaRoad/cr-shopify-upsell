@@ -1,4 +1,6 @@
 .idea
+.env
+.env
 **/gin-bin
 *.http
 .DS_Store

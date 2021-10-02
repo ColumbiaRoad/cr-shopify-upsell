@@ -54,6 +54,12 @@ func (s *Server) Respond(c echo.Context, code int, v interface{}) error {
 	return c.JSON(code, v)
 }
 
+// Redirect to another destination with a code
+func (s *Server) Redirect(c echo.Context, code int, url string) error {
+	c.Response().Header().Set("User-Agent", UserAgent)
+	return c.Redirect(code, url)
+}
+
 // Run the server at address
 func (s *Server) Run() error {
 	return s.Router.Start(":" + port())
