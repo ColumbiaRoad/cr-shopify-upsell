@@ -3,9 +3,7 @@ package api
 import (
 	_ "github.com/ColumbiaRoad/cr-shopify-upsell/backend/api/docs"
 
-	//_ "goStarter/demo/docs"
-
-	_ "github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v4/middleware"
 
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
@@ -13,6 +11,7 @@ import (
 // Routes sets up Server routes
 //go:generate swag init -g server.go
 func (s *Server) Routes() {
+	s.Router.Use(middleware.CORS())
 	s.Router.GET("/health", s.handleHealth())
 	v1 := s.Router.Group("/v1")
 
