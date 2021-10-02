@@ -1,0 +1,14 @@
+.git
+terraform
+**/node_modules
+**/build
+**/gin-bin
+**/Dockerfile*
+**/*.env
+**/db/migrations/*
+**/db/data/*
+**/README.md
+README.md
+utils/**
+Makefile
+docker-compose.yml

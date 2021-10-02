@@ -1,0 +1,7 @@
+.idea
+**/gin-bin
+*.http
+.DS_Store
+# generated swagger docs
+*/api/docs/swagger.*
+*/api/docs/docs.go
