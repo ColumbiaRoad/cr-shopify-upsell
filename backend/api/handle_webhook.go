@@ -3,7 +3,6 @@ package api
 import (
 	"net/http"
 
-	"github.com/ColumbiaRoad/cr-shopify-upsell/backend/services"
 	"github.com/labstack/echo/v4"
 )
 
@@ -21,6 +20,7 @@ type WebhookForbidden struct {
 type LineItem struct {
 	VariantId string `json:"variant_id"`
 	Quantity  int    `json:"quantity"`
+	Price     string `json:"price"`
 }
 
 type Order struct {
@@ -37,19 +37,18 @@ type Order struct {
 // @Tags things
 func (s *Server) handleWebhook() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// 1. Verify webhookshopifyApp.VerifyWebhookRequest
-		/*validated := s.App.VerifyWebhookRequest(c.Request())
+		validated := s.Shopify.VerifyWebhookRequest(c.Request())
 		if !validated {
 			return s.ErrForbidden("Forbidden")
 		}
-		// 2. Check type (orders/paid)
+		// Is webhook type relevant? (orders/paid)
 		topic := c.Request().Header.Get("X-Shopify-Topic")
 		if topic != OrderPaid {
 			// Webhook not relevant.
 			return s.Respond(c, http.StatusOK, WebhookResponse{Msg: "Ok"})
-		}*/
+		}
 
-		// 3. Check if line items with correct variantID exists.
+		// Check if line items with compensation variant id exists.
 		var requestData Order
 
 		if err := s.Bind(c, &requestData); err != nil {
@@ -60,24 +59,23 @@ func (s *Server) handleWebhook() echo.HandlerFunc {
 
 		for _, s := range requestData.LineItems {
 			if s.VariantId == CompensationVariantId {
+				// TODO: Get real variant ID for a given merchant. Maybe from a in memory cache?
 				compensationLineItems = append(compensationLineItems, s)
 			}
 		}
 
 		if len(compensationLineItems) == 0 {
-			// No compensation items in this order. Nothing to process.
+			// No compensation item in this order. Nothing to process.
 			return s.Respond(c, http.StatusOK, WebhookResponse{Msg: "Ok"})
 		}
 
-		// 4. Some items found, let's send a billing request.
-		// 4.1. Store in DB
-		// TODO
-		// 4.2. Fire another thread to make billing request async
-		go services.MakeShopifyBillingRequest()
-		// 4.3. Respond OK.
-		return s.Respond(c, http.StatusOK, WebhookResponse{Msg: requestData.LineItems[1].VariantId})
+		i := compensationLineItems[0] // There should always be only one.
+
+		// Compensation item found, let's store the webhook and send an async billing request.
+		if err := s.Merchant.HandleIncomingWebhook(c.Request().Context(), "shopurl", requestData.Id, i.Price, i.Quantity); err != nil {
+			return s.ErrBadRequest("problem.")
+		}
+
+		return s.Respond(c, http.StatusOK, WebhookResponse{Msg: "Ok"})
 	}
 }
-
-// there can be multiple quantity of the compensation product.
-//

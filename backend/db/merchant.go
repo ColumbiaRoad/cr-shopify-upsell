@@ -74,3 +74,19 @@ func (db *Database) AddVariantID(ctx context.Context, shopURL string, variantID 
 	}
 	return merchantID, err
 }
+
+func (db *Database) PersistWebhook(ctx context.Context, shop_url string, order_id string, total_price string, compensation_quantity int) (err error) {
+	conn, err := db.Conn(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+
+	row := conn.QueryRow(ctx,
+		`INSERT INTO webhooks(created_at, updated_at, shop_url, compensation_quantity, total_price, order_id) 
+				VALUES (current_timestamp, current_timestamp, $1, $2, $3, $4)
+			RETURNING id`, shop_url, compensation_quantity, total_price, order_id)
+
+	err = row.Scan()
+	return err
+}
