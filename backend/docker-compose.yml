@@ -1,0 +1,47 @@
+version: "3.7"
+
+services:
+  offset-db:
+    image: postgres:12-alpine
+    ports:
+      - 56432:5432
+    environment:
+      POSTGRES_DB: demo
+      POSTGRES_USER: dbuser
+      POSTGRES_PASSWORD: dbpass
+    container_name: offset-db
+
+  offset:
+    image: godev
+    depends_on:
+      - offset-db
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    ports:
+      - 4000:80
+    working_dir: /app
+    command: gin -p 80 -i
+    container_name: offset
+
+  auto-test-it:
+    image: godev
+    volumes:
+      - .:/app
+    command: gow test ./...
+    container_name: auto-test-it
+
+  auto-doc-it:
+    image: godev
+    volumes:
+      - .:/app
+    command: dev/autodoc.sh
+    container_name: auto-doc-it
+
+  auto-lint-it:
+    image: godev
+    volumes:
+      - .:/app
+    command: gow -e=go -g=golangci-lint run --fix
+    container_name: auto-lint-it

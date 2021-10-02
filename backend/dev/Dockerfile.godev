@@ -1,0 +1,12 @@
+FROM golang:alpine
+ENV CGO_ENABLED=0
+WORKDIR /app
+# golangci-lint install command from https://golangci-lint.run/usage/install/
+RUN apk add git curl && \
+    go get github.com/codegangsta/gin && \
+    go get github.com/mitranim/gow && \
+    go get golang.org/x/lint/golint && \
+    go get github.com/swaggo/swag/cmd/swag && \
+    curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.37.0
+COPY go.* ./
+RUN go mod download
