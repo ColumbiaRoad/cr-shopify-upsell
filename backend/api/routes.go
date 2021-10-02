@@ -18,4 +18,5 @@ func (s *Server) Routes() {
 
 	// Swagger docs
 	v1.GET("/docs/*", echoSwagger.WrapHandler)
+	v1.GET("/offer", s.handleOffer())
 }

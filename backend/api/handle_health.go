@@ -16,7 +16,7 @@ type HealthResponse struct {
 // @Accept json
 // @Produce json
 // @Success 200 {object} HealthResponse "ok"
-// @Router /v1/health [get]
+// @Router /health [get]
 // @Tags things
 func (s *Server) handleHealth() echo.HandlerFunc {
 	return func(c echo.Context) error {
