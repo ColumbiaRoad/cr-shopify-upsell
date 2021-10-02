@@ -16,7 +16,7 @@ func TestOfferEndpoint(t *testing.T) {
 	fx := setTestFixture()
 	r := servertest.Get(fx.api, "/v1/offer")
 	is.Equal(r.Code, http.StatusOK)
-	var offerResponse OfferResponse
+	var offerResponse Offer
 	err := json.NewDecoder(r.Body).Decode(&offerResponse)
 	is.NoErr(err)
 	is.Equal(offerResponse.ProductTitle, "Climate Compensation")

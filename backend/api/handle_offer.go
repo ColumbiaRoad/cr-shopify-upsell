@@ -6,8 +6,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// OfferResponse describes the offered upsell product. See https://shopify.dev/apps/checkout/post-purchase/update-an-order-for-a-checkout-post-purchase-app-extension
-type OfferResponse struct {
+// Offer describes the offered upsell product. See https://shopify.dev/apps/checkout/post-purchase/update-an-order-for-a-checkout-post-purchase-app-extension
+type Offer struct {
 	VariantId          string `json:"variantId"`
 	ProductTitle       string `json:"productTitle"`
 	ProductImageURL    string `json:"productImageURL"`
@@ -20,12 +20,12 @@ type OfferResponse struct {
 // @Description Showcasing how to use the application architecture
 // @Accept json
 // @Produce json
-// @Success 200 {object} OfferResponse "ok"
+// @Success 200 {object} Offer "ok"
 // @Router /v1/offer [get]
 // @Tags things
 func (s *Server) handleOffer() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		responseBody := OfferResponse{
+		responseBody := Offer{
 			VariantId:          "abcdefg",
 			ProductTitle:       "Climate Compensation",
 			ProductImageURL:    "https://cataas.com/cat/cute/says/hello",
