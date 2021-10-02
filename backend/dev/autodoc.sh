@@ -1,3 +1,3 @@
 #!/bin/sh
-ignores=$(echo */api/docs | awk 'BEGIN{OFS=","}{NF=NF}1')
+  ignores=$(echo /api/docs | awk 'BEGIN{OFS=","}{NF=NF}1')
 exec gow -e=go -i=$ignores generate ./...
