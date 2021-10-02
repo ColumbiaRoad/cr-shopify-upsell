@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/ColumbiaRoad/cr-shopify-upsell/backend/lib/server"
+	goshopify "github.com/bold-commerce/go-shopify"
 )
 
 // ErrorResponse wraps go errors into an object
@@ -18,7 +19,7 @@ type SuccessResponse struct {
 // this is where you would add your "app's" which has the business logic
 type Server struct {
 	*server.Server
-	JWTSecret string
+	*goshopify.App
 }
 
 // New creates a new Server with an HTTP Router
@@ -28,8 +29,16 @@ type Server struct {
 // @termsOfService http://swagger.io/terms/
 // @host things-host.com
 // @BasePath /v1
-func New() *Server {
+func New(apiKey, apiSecret, redirectUrl string) *Server {
+	// Create an app somewhere.
+	app := goshopify.App{
+		ApiKey:      apiKey,
+		ApiSecret:   apiSecret,
+		RedirectUrl: redirectUrl,
+		Scope:       "read_products,read_orders",
+	}
 	return &Server{
 		Server: server.New(),
+		App:    &app,
 	}
 }
