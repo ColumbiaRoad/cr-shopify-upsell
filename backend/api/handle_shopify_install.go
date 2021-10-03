@@ -11,6 +11,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+const productImageURL = "https://placekitten.com/2048/2048"
+
 // @Summary Shopify Oauth install endpoint
 // @Description This is the starting point of the app install flow
 // @Accept html
@@ -52,15 +54,21 @@ func (s *Server) handleCallback() echo.HandlerFunc {
 		if err != nil {
 			return s.Respond(c, http.StatusBadRequest, ErrorResponse{Error: "failed to create merchant"})
 		}
-		client := goshopify.NewClient(*s.Shopify, shopURL, accessToken)
+		shopifyClient := goshopify.NewClient(*s.Shopify, shopURL, accessToken)
 
+		img := goshopify.Image{
+			Src: productImageURL,
+		}
+		var images []goshopify.Image
+		images = append(images, img)
 		p := goshopify.Product{
 			Vendor:   "Compensate",
 			Title:    "Carbon offset",
 			BodyHTML: "Help fight climate change by donating a small amount of money to the Compensate non-profit climate fund",
+			Images:   images,
 		}
 
-		product, err := client.Product.Create(p)
+		product, err := shopifyClient.Product.Create(p)
 		if err != nil {
 			log.Warn(err)
 			return s.Respond(c, http.StatusInternalServerError, ErrorResponse{Error: "failed to create product cariant"})
