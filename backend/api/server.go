@@ -25,11 +25,11 @@ type Server struct {
 }
 
 // New creates a new Server with an HTTP Router
-// @title The Service
+// @title Carbon offset - Shopify upsell extension
 // @version 1.0
-// @description This is a sample server
+// @description Enable merchants to help fight climate change
 // @termsOfService http://swagger.io/terms/
-// @host things-host.com
+// @host tba.com
 // @BasePath /v1
 func New(apiKey, apiSecret, redirectUrl string) *Server {
 	// Create an app somewhere.
