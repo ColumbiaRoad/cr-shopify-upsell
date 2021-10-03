@@ -30,7 +30,7 @@ func (s *Server) handleInstall() echo.HandlerFunc {
 }
 
 // @Summary Shopify Callback handler
-// @Description This is the starting point of the app install flow
+// @Description Once the merchant has approved access we continue the installation process
 // @Accept html
 // @Produce html
 // @Success 200
