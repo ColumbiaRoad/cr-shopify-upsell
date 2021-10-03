@@ -74,3 +74,21 @@ func (db *Database) AddVariantID(ctx context.Context, shopURL string, variantID 
 	}
 	return merchantID, err
 }
+
+// GetProductVariantID returns the product variant id for the carbon offset product
+func (db *Database) GetProductVariantID(ctx context.Context, shopURL string) (variantID int64, err error) {
+	conn, err := db.Conn(ctx)
+	if err != nil {
+		return variantID, err
+	}
+	defer conn.Release()
+
+	row := conn.QueryRow(ctx,
+		`SELECT offset_variant_id FROM merchants WHERE shop_url = $1`, shopURL)
+	err = row.Scan(&variantID)
+	if err != nil {
+		return variantID, err
+	}
+	return variantID, err
+
+}

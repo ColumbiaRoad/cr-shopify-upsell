@@ -11,8 +11,8 @@ type HealthResponse struct {
 	Msg string `json:"message"`
 }
 
-// @Summary Just demoing things
-// @Description Showcasing how to use the application architecture
+// @Summary Health endpoint
+// @Description Nice to have for health checks
 // @Accept json
 // @Produce json
 // @Success 200 {object} HealthResponse "ok"
