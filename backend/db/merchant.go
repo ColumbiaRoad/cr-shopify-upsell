@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-func (db *Database) PersistToken(ctx context.Context, shopUrl, accessToken string) (merchantID int64, err error) {
+func (db *Database) PersistToken(ctx context.Context, shopURL, accessToken string) (merchantID int64, err error) {
 	conn, err := db.Conn(ctx)
 	if err != nil {
 		return merchantID, err
@@ -13,7 +13,7 @@ func (db *Database) PersistToken(ctx context.Context, shopUrl, accessToken strin
 	row := conn.QueryRow(ctx,
 		`INSERT INTO merchants(created_at, updated_at, shop_url, access_token) 
 				VALUES (current_timestamp, current_timestamp, $1, $2)
-			RETURNING id`, shopUrl, accessToken)
+			RETURNING id`, shopURL, accessToken)
 
 	err = row.Scan(&merchantID)
 	if err != nil {
@@ -21,7 +21,7 @@ func (db *Database) PersistToken(ctx context.Context, shopUrl, accessToken strin
 	}
 	return merchantID, err
 }
-func (db *Database) CheckMerchantByShopURL(ctx context.Context, shopURL string) (int64, error) {
+func (db *Database) CheckMerchantByshopURL(ctx context.Context, shopURL string) (int64, error) {
 	var merchantID int64
 	conn, err := db.Conn(ctx)
 	if err != nil {
