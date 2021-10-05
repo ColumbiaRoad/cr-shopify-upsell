@@ -40,6 +40,7 @@ func main() {
 	}
 	m := merchant.New(db)
 	server.Merchant = m
+	server.ApiSecret = apiSecret
 	if err != nil {
 		panic(err)
 	}

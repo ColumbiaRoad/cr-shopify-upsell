@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 
 	goshopify "github.com/bold-commerce/go-shopify"
@@ -40,7 +39,7 @@ func (s *Server) handleCallback() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if ok, _ := s.Shopify.VerifyAuthorizationURL(c.Request().URL); !ok {
 			log.Warn("failed to validate signature")
-			return s.Respond(c, http.StatusUnauthorized, ErrorResponse{Error: "invalid Signature"})
+			return s.Respond(c, http.StatusUnauthorized, ErrorResponse{Error: "invalid signature"})
 		}
 		ctx := c.Request().Context()
 		shopURL := c.QueryParams().Get("shop")
@@ -50,7 +49,7 @@ func (s *Server) handleCallback() echo.HandlerFunc {
 			log.Warnf("failed to get token: %s", accessToken)
 			return s.Respond(c, http.StatusBadRequest, ErrorResponse{Error: "failed to get token"})
 		}
-		merchantID, err := s.Merchant.HandleInstall(ctx, shopURL, accessToken)
+		_, err = s.Merchant.HandleInstall(ctx, shopURL, accessToken)
 		if err != nil {
 			return s.Respond(c, http.StatusBadRequest, ErrorResponse{Error: "failed to create merchant"})
 		}
@@ -62,25 +61,22 @@ func (s *Server) handleCallback() echo.HandlerFunc {
 		var images []goshopify.Image
 		images = append(images, img)
 		p := goshopify.Product{
-			Vendor:   "Compensate",
+			Vendor:   "Climate Action",
 			Title:    "Carbon offset",
 			BodyHTML: "Help fight climate change by donating a small amount of money to the Compensate non-profit climate fund",
 			Images:   images,
 		}
-
 		product, err := shopifyClient.Product.Create(p)
 		if err != nil {
 			log.Warn(err)
 			return s.Respond(c, http.StatusInternalServerError, ErrorResponse{Error: "failed to create product cariant"})
 		}
-		merchantID, err = s.Merchant.AddVariantID(ctx, shopURL, product.ID)
+		_, err = s.Merchant.AddVariantID(ctx, shopURL, product.ID)
 		if err != nil {
 			log.Warn(err)
 			return s.Respond(c, http.StatusInternalServerError, ErrorResponse{Error: "failed to persist product variant"})
 		}
-		fmt.Println("My produist", product, merchantID)
 		// TODO: render the admin template
-		log.Warn("merchant id ", merchantID)
 		return s.Respond(c, http.StatusOK, ErrorResponse{Error: " Looks good to me!"})
 	}
 }
