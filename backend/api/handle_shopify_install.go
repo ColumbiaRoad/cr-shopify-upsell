@@ -82,7 +82,10 @@ func (s *Server) handleCallback() echo.HandlerFunc {
 		fmt.Println("My produist", product, merchantID)
 		// TODO: render the admin template
 		log.Warn("merchant id ", merchantID)
-		return s.Respond(c, http.StatusOK, ErrorResponse{Error: " Looks good to me!"})
+		return c.Render(http.StatusOK, "index.html", map[string]interface{}{
+			"shop":   "offset.myshopify.com",
+			"apiKey": "asdasf123123",
+		})
 	}
 }
 func (s *Server) handleIndex() echo.HandlerFunc {
