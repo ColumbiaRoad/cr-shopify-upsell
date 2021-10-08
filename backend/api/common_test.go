@@ -2,7 +2,19 @@ package api
 
 import (
 	"context"
+	"io"
+	"text/template"
+
+	"github.com/labstack/echo/v4"
 )
+
+type testTemplate struct {
+	templates *template.Template
+}
+
+func (t *testTemplate) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	return t.templates.ExecuteTemplate(w, name, data)
+}
 
 type fixture struct {
 	api      *Server
@@ -18,6 +30,8 @@ type testMerchant struct {
 func setTestFixture() *fixture {
 	srv := New("", "", "")
 	srv.Routes()
+	t := &testTemplate{}
+	srv.Router.Renderer = t
 	merchant := &testMerchant{}
 	srv.Merchant = merchant
 	return &fixture{

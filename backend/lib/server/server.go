@@ -33,8 +33,13 @@ type Server struct {
 }
 
 func New() *Server {
+	templatePath, found := os.LookupEnv("TEMPLATE_PATH")
+	if !found {
+		templatePath = "/app/templates"
+	}
+	templates := template.Must(template.ParseGlob(templatePath + "/*.html"))
 	t := &Template{
-		templates: template.Must(template.ParseGlob("templates/*.html")),
+		templates: templates,
 	}
 	router := echo.New()
 	router.Renderer = t
