@@ -32,6 +32,9 @@ func (db *Database) CheckMerchantByShopURL(ctx context.Context, shopURL string) 
 	row := conn.QueryRow(ctx,
 		`SELECT id FROM merchants WHERE shop_url = $1`, shopURL)
 	err = row.Scan(&merchantID)
+	if err.Error() == "no rows in result set" {
+		return merchantID, nil
+	}
 	if err != nil {
 		return merchantID, err
 	}

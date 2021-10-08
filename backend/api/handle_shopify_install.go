@@ -52,7 +52,8 @@ func (s *Server) handleCallback() echo.HandlerFunc {
 		}
 		merchantID, err := s.Merchant.HandleInstall(ctx, shopURL, accessToken)
 		if err != nil {
-			return s.Respond(c, http.StatusBadRequest, ErrorResponse{Error: "failed to create merchant"})
+			errValue := fmt.Sprintf("failed to create merchant: %v", err)
+			return s.Respond(c, http.StatusBadRequest, ErrorResponse{Error: errValue})
 		}
 		shopifyClient := goshopify.NewClient(*s.Shopify, shopURL, accessToken)
 
@@ -82,5 +83,13 @@ func (s *Server) handleCallback() echo.HandlerFunc {
 		// TODO: render the admin template
 		log.Warn("merchant id ", merchantID)
 		return s.Respond(c, http.StatusOK, ErrorResponse{Error: " Looks good to me!"})
+	}
+}
+func (s *Server) handleIndex() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		return c.Render(http.StatusOK, "index.html", map[string]interface{}{
+			"shop":   "offset.myshopify.com",
+			"apiKey": "asdasf123123",
+		})
 	}
 }
