@@ -1,6 +1,9 @@
 package api
 
 import (
+	"log"
+	"os"
+
 	"github.com/ColumbiaRoad/cr-shopify-upsell/backend/app/merchant"
 	"github.com/ColumbiaRoad/cr-shopify-upsell/backend/lib/server"
 	goshopify "github.com/bold-commerce/go-shopify"
@@ -24,6 +27,8 @@ type Server struct {
 	Merchant merchant.Merchants
 }
 
+var AppURL string
+
 // New creates a new Server with an HTTP Router
 // @title Carbon offset - Shopify upsell extension
 // @version 1.0
@@ -33,6 +38,11 @@ type Server struct {
 // @BasePath /v1
 func New(apiKey, apiSecret, redirectUrl string) *Server {
 	// Create an app somewhere.
+	appURL, found := os.LookupEnv("BACKEND_URL")
+	if !found {
+		log.Fatalf("variable BACKEND_URL not defined")
+	}
+	AppURL = appURL
 	app := goshopify.App{
 		ApiKey:      apiKey,
 		ApiSecret:   apiSecret,

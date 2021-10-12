@@ -3,6 +3,20 @@ Backend service for Carbon Offset Post Purchase Upsell Shopify app
 
 To run the service install docker, docker compose and `make run`
 
+You need to have .env file in your backend directory with the following variables
+
+```bash
+SHOPIFY_API_SECRET=shpss_12123
+SHOPIFY_API_KEY=8024123123
+BACKEND_URL=https://tacos.eu.ngrok.io #  Your ngrok url
+PGHOST=offset-db
+PGDATABASE=offset
+PGUSER=dbuser
+PGPASSWORD=dbpass
+PGPORT=5432
+TEMPLATE_PATH=/app/templates
+```
+
 
 ## Functionality
 - Shopify App install flow including Billing API setup

@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"text/template"
 	"time"
 
 	"github.com/labstack/echo/v4/middleware"
@@ -17,13 +19,30 @@ import (
 
 const UserAgent = "Columbia Road"
 
+type Template struct {
+	templates *template.Template
+}
+
+func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	return t.templates.ExecuteTemplate(w, name, data)
+}
+
 type Server struct {
 	Router   *echo.Echo
 	validate *validator.Validate
 }
 
 func New() *Server {
+	templatePath, found := os.LookupEnv("TEMPLATE_PATH")
+	if !found {
+		templatePath = "/app/templates"
+	}
+	templates := template.Must(template.ParseGlob(templatePath + "/*.html"))
+	t := &Template{
+		templates: templates,
+	}
 	router := echo.New()
+	router.Renderer = t
 	router.Use(middleware.Logger())
 	router.Logger.SetLevel(log.WARN)
 	router.Use(middleware.Recover())

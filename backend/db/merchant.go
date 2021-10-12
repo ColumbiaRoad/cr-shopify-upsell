@@ -2,6 +2,8 @@ package db
 
 import (
 	"context"
+
+	"github.com/ColumbiaRoad/cr-shopify-upsell/backend/app/merchant"
 )
 
 func (db *Database) PersistToken(ctx context.Context, shopUrl, accessToken string) (merchantID int64, err error) {
@@ -25,7 +27,7 @@ func (db *Database) CheckMerchantByShopURL(ctx context.Context, shopURL string) 
 	var merchantID int64
 	conn, err := db.Conn(ctx)
 	if err != nil {
-		return merchantID, err
+		return 0, err
 	}
 	defer conn.Release()
 
@@ -33,9 +35,23 @@ func (db *Database) CheckMerchantByShopURL(ctx context.Context, shopURL string) 
 		`SELECT id FROM merchants WHERE shop_url = $1`, shopURL)
 	err = row.Scan(&merchantID)
 	if err != nil {
-		return merchantID, err
+		return 0, err
 	}
 	return merchantID, err
+}
+
+func (db *Database) GetProfileByURL(ctx context.Context, shopURL string) (merchant.Profile, error) {
+	profile := merchant.Profile{}
+	conn, err := db.Conn(ctx)
+	if err != nil {
+		return profile, err
+	}
+	defer conn.Release()
+
+	row := conn.QueryRow(ctx,
+		`SELECT access_token FROM merchants WHERE shop_url = $1`, shopURL)
+	err = row.Scan(&profile.AccessToken)
+	return profile, err
 }
 
 func (db *Database) UpdateToken(ctx context.Context, merchantID int64, accessToken string) (int64, error) {
