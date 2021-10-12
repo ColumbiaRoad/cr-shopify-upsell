@@ -23,9 +23,27 @@ const productImageURL = "https://placekitten.com/2048/2048"
 func (s *Server) handleInstall() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		shopName := c.QueryParams().Get("shop")
+		ctx := c.Request().Context()
 		state := "nonce"
-		authUrl := s.Shopify.AuthorizeUrl(shopName, state)
-		return s.Redirect(c, http.StatusFound, authUrl)
+		if ok, _ := s.Shopify.VerifyAuthorizationURL(c.Request().URL); !ok {
+			log.Warn("failed to validate signature")
+			return s.Respond(c, http.StatusUnauthorized, ErrorResponse{Error: "invalid Signature"})
+		}
+		profile, err := s.Merchant.GetShopByURL(ctx, shopName)
+		if err != nil {
+			log.Errorf("failed to check profile: %v", err)
+			return s.Respond(c, http.StatusBadRequest, "error when checking for profile:")
+		}
+		if profile.AccessToken == "" {
+			authUrl := s.Shopify.AuthorizeUrl(shopName, state)
+			return s.Redirect(c, http.StatusFound, authUrl)
+		}
+
+		return c.Render(http.StatusOK, "index.html", map[string]interface{}{
+			"shop":   "offset.myshopify.com",
+			"apiKey": "asdasf123123",
+		})
+
 	}
 }
 
@@ -74,25 +92,14 @@ func (s *Server) handleCallback() echo.HandlerFunc {
 			log.Warn(err)
 			return s.Respond(c, http.StatusInternalServerError, ErrorResponse{Error: "failed to create product cariant"})
 		}
-		merchantID, err = s.Merchant.AddVariantID(ctx, shopURL, product.ID)
+		_, err = s.Merchant.AddVariantID(ctx, shopURL, product.ID)
 		if err != nil {
 			log.Warn(err)
 			return s.Respond(c, http.StatusInternalServerError, ErrorResponse{Error: "failed to persist product variant"})
 		}
-		fmt.Println("My produist", product, merchantID)
 		// TODO: render the admin template
 		log.Warn("merchant id ", merchantID)
-		return c.Render(http.StatusOK, "index.html", map[string]interface{}{
-			"shop":   "offset.myshopify.com",
-			"apiKey": "asdasf123123",
-		})
-	}
-}
-func (s *Server) handleIndex() echo.HandlerFunc {
-	return func(c echo.Context) error {
-		return c.Render(http.StatusOK, "index.html", map[string]interface{}{
-			"shop":   "offset.myshopify.com",
-			"apiKey": "asdasf123123",
-		})
+		returnURL := AppURL + "/v1/shopify/?" + c.Request().URL.RawQuery
+		return s.Redirect(c, http.StatusSeeOther, returnURL)
 	}
 }
