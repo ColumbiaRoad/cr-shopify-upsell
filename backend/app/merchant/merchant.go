@@ -35,12 +35,13 @@ type Merchants interface {
 func (m *merchant) HandleInstall(ctx context.Context, shopUrl, accessToken string) (int64, error) {
 	existsID, err := m.storage.CheckMerchantByShopURL(ctx, shopUrl)
 	if err != nil {
-		return 0, err
+		if err.Error() != "no rows in result set" {
+			return 0, err
+		}
 	}
 	if existsID > 0 {
 		return m.storage.UpdateToken(ctx, existsID, accessToken)
 	}
-
 	merchantID, err := m.storage.PersistToken(ctx, shopUrl, accessToken)
 	return merchantID, err
 }

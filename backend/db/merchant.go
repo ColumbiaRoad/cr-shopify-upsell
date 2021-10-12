@@ -40,7 +40,8 @@ func (db *Database) CheckMerchantByShopURL(ctx context.Context, shopURL string) 
 	return merchantID, err
 }
 
-func (db *Database) GetProfileByURL(ctx context.Context, shopURL string) (profile merchant.Profile, err error) {
+func (db *Database) GetProfileByURL(ctx context.Context, shopURL string) (merchant.Profile, error) {
+	profile := merchant.Profile{}
 	conn, err := db.Conn(ctx)
 	if err != nil {
 		return profile, err
@@ -50,9 +51,6 @@ func (db *Database) GetProfileByURL(ctx context.Context, shopURL string) (profil
 	row := conn.QueryRow(ctx,
 		`SELECT access_token FROM merchants WHERE shop_url = $1`, shopURL)
 	err = row.Scan(&profile.AccessToken)
-	if err != nil {
-		return profile, err
-	}
 	return profile, err
 }
 

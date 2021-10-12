@@ -13,14 +13,14 @@ import (
 
 const productImageURL = "https://placekitten.com/2048/2048"
 
-// @Summary Shopify Oauth install endpoint
-// @Description This is the starting point of the app install flow
+// @Summary Shopify admin app start page and starting point for app installs
+// @Description This is the starting point of the app install flow but also serves the admin app for already installed merchants
 // @Accept html
 // @Produce html
 // @Success 302
 // @Router /v1/shopify/ [get]
 // @Tags shopify
-func (s *Server) handleInstall() echo.HandlerFunc {
+func (s *Server) handleShopify() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		shopName := c.QueryParams().Get("shop")
 		ctx := c.Request().Context()
@@ -31,17 +31,18 @@ func (s *Server) handleInstall() echo.HandlerFunc {
 		}
 		profile, err := s.Merchant.GetShopByURL(ctx, shopName)
 		if err != nil {
-			log.Errorf("failed to check profile: %v", err)
-			return s.Respond(c, http.StatusBadRequest, "error when checking for profile:")
+			if err.Error() != "no rows in result set" {
+				log.Errorf("failed to check profile: %v", err)
+				return s.Respond(c, http.StatusBadRequest, "error when checking for profile:")
+			}
 		}
 		if profile.AccessToken == "" {
 			authUrl := s.Shopify.AuthorizeUrl(shopName, state)
 			return s.Redirect(c, http.StatusFound, authUrl)
 		}
-
 		return c.Render(http.StatusOK, "index.html", map[string]interface{}{
-			"shop":   "offset.myshopify.com",
-			"apiKey": "asdasf123123",
+			"shop":   shopName,
+			"apiKey": s.Shopify.ApiKey,
 		})
 
 	}
@@ -90,7 +91,7 @@ func (s *Server) handleCallback() echo.HandlerFunc {
 		product, err := shopifyClient.Product.Create(p)
 		if err != nil {
 			log.Warn(err)
-			return s.Respond(c, http.StatusInternalServerError, ErrorResponse{Error: "failed to create product cariant"})
+			return s.Respond(c, http.StatusInternalServerError, ErrorResponse{Error: "failed to create product variant"})
 		}
 		_, err = s.Merchant.AddVariantID(ctx, shopURL, product.ID)
 		if err != nil {
