@@ -1,9 +1,6 @@
 package api
 
 import (
-	"log"
-	"os"
-
 	"github.com/ColumbiaRoad/cr-shopify-upsell/backend/app/merchant"
 	"github.com/ColumbiaRoad/cr-shopify-upsell/backend/lib/server"
 	goshopify "github.com/bold-commerce/go-shopify"
@@ -36,17 +33,13 @@ var AppURL string
 // @termsOfService http://swagger.io/terms/
 // @host tba.com
 // @BasePath /v1
-func New(apiKey, apiSecret, redirectUrl string) *Server {
+func New(apiKey, apiSecret, backendURL string) *Server {
 	// Create an app somewhere.
-	appURL, found := os.LookupEnv("BACKEND_URL")
-	if !found {
-		log.Fatalf("variable BACKEND_URL not defined")
-	}
-	AppURL = appURL
+	AppURL = backendURL
 	app := goshopify.App{
 		ApiKey:      apiKey,
 		ApiSecret:   apiSecret,
-		RedirectUrl: redirectUrl,
+		RedirectUrl: backendURL + "/v1/shopify/callback",
 		Scope:       "read_products,write_products,read_orders",
 	}
 	return &Server{

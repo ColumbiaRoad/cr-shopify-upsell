@@ -28,9 +28,7 @@ func main() {
 	if !found {
 		log.Fatalf("missing env variable BACKEND_URL")
 	}
-
-	redirectURL := backendURL + "/v1/shopify/callback"
-	server := api.New(apiKey, apiSecret, redirectURL)
+	server := api.New(apiKey, apiSecret, backendURL)
 	server.Router.Logger.SetLevel(log.DEBUG)
 
 	server.Routes()
