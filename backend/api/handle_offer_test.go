@@ -23,7 +23,7 @@ func TestOffer(t *testing.T) {
 	var offerResponse Offer
 	err := json.NewDecoder(r.Body).Decode(&offerResponse)
 	is.NoErr(err)
-	is.Equal(offerResponse.ProductTitle, "Climate Compensation")
+	is.Equal(offerResponse.ProductTitle, "🌍 Take climate action!")
 	is.Equal(offerResponse.VariantId, int64(123123))
 }
 
