@@ -25,8 +25,9 @@ type SuccessResponse struct {
 // this is where you would add your "app's" which has the business logic
 type Server struct {
 	*server.Server
-	Shopify  *goshopify.App
-	Merchant merchant.Merchants
+	Shopify   *goshopify.App
+	Merchant  merchant.Merchants
+	ApiSecret string
 }
 
 type Template struct {
