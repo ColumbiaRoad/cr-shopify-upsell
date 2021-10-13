@@ -94,8 +94,6 @@ export function App() {
 
     // Make a request to Shopify servers to apply the changeset
     await applyChangeset(token);
-
-
     // Redirect to the thank-you page
     done();
   }

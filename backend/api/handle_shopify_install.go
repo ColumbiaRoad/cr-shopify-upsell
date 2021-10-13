@@ -83,7 +83,7 @@ func (s *Server) handleCallback() echo.HandlerFunc {
 		images = append(images, img)
 		p := goshopify.Product{
 			Vendor:   "Climate Action",
-			Title:    "Climate tip",
+			Title:    "Take Climate Action",
 			BodyHTML: "Help fight climate change by donating a small amount of money to the Compensate non-profit climate fund",
 			Images:   images,
 		}

@@ -97,7 +97,7 @@ func (s *Server) handleSignChangeSet() echo.HandlerFunc {
 		if !ok && !token.Valid {
 			return s.Respond(c, http.StatusUnauthorized, err.Error())
 		}
-		if claims["referenceId"] != req.ReferenceId {
+		if claims["sub"] != req.ReferenceId {
 			return s.Respond(c, http.StatusConflict, fmt.Errorf("failed to validate claim payload"))
 		}
 
@@ -105,7 +105,7 @@ func (s *Server) handleSignChangeSet() echo.HandlerFunc {
 			"jti":     uuid.New(),
 			"iss":     s.Shopify.ApiKey,
 			"iat":     time.Now().UTC().UnixNano() / 1e6,
-			"sub":     req.ReferenceId, // TODO verify that referenceID is the same as in the claim["decodedToken.input_data.initialPurchase.referenceId"]",
+			"sub":     req.ReferenceId,
 			"changes": req.Changes,
 		})
 
@@ -115,6 +115,5 @@ func (s *Server) handleSignChangeSet() echo.HandlerFunc {
 			return s.Respond(c, http.StatusInternalServerError, fmt.Errorf("failed to sign the request: %v", err))
 		}
 		return s.Respond(c, http.StatusOK, signResponse{Token: tokenString})
-
 	}
 }
