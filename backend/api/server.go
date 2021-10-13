@@ -1,9 +1,14 @@
 package api
 
 import (
+	"html/template"
+	"io"
+	"os"
+
 	"github.com/ColumbiaRoad/cr-shopify-upsell/backend/app/merchant"
 	"github.com/ColumbiaRoad/cr-shopify-upsell/backend/lib/server"
 	goshopify "github.com/bold-commerce/go-shopify"
+	"github.com/labstack/echo/v4"
 )
 
 // ErrorResponse wraps go errors into an object
@@ -24,6 +29,14 @@ type Server struct {
 	Merchant merchant.Merchants
 }
 
+type Template struct {
+	templates *template.Template
+}
+
+func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	return t.templates.ExecuteTemplate(w, name, data)
+}
+
 var AppURL string
 
 // New creates a new Server with an HTTP Router
@@ -42,8 +55,19 @@ func New(apiKey, apiSecret, backendURL string) *Server {
 		RedirectUrl: backendURL + "/v1/shopify/callback",
 		Scope:       "read_products,write_products,read_orders",
 	}
+
+	templatePath, found := os.LookupEnv("TEMPLATE_PATH")
+	if !found {
+		templatePath = "/app/templates"
+	}
+	templates := template.Must(template.ParseGlob(templatePath + "/*.html"))
+	t := &Template{
+		templates: templates,
+	}
+	s := server.New()
+	s.Router.Renderer = t
 	return &Server{
-		Server:  server.New(),
+		Server:  s,
 		Shopify: &app,
 	}
 }
