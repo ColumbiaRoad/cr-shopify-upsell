@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/labstack/gommon/log"
-
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -24,8 +22,12 @@ type Offer struct {
 
 type signParams struct {
 	ReferenceId string `json:"referenceId"`
-	Changes     string `json:"changes"`
-	Token       string `json:"token"`
+	Changes     []struct {
+		Type      string `json:"type"`
+		VariantId int64  `json:"variantId"`
+		Quantity  int    `json:"quantity"`
+	} `json:"changes"`
+	Token string `json:"token"`
 }
 
 type signResponse struct {
@@ -56,11 +58,9 @@ func (s *Server) handleOffer() echo.HandlerFunc {
 		}
 		responseBody := Offer{
 			VariantId:          variantID,
-			ProductTitle:       "Climate Compensation",
-			ProductImageURL:    "https://cataas.com/cat/cute/says/hello",
-			ProductDescription: "Please save the world.",
-			OriginalPrice:      2,
-			DiscountedPrice:    2,
+			ProductTitle:       "🌍 Take climate action!",
+			ProductImageURL:    "https://source.unsplash.com/aL7SA1ASVdQ/800x800",
+			ProductDescription: "You can help make a difference by making a small donation to help fight climate change!",
 		}
 		return s.Respond(c, http.StatusOK, responseBody)
 	}
@@ -85,26 +85,25 @@ func (s *Server) handleSignChangeSet() echo.HandlerFunc {
 		}
 		token, err := jwt.Parse(req.Token, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
 			return hmacSecret, nil
 		})
 		if err != nil {
-			return s.Respond(c, http.StatusUnprocessableEntity, err.Error())
+			return s.Respond(c, http.StatusUnprocessableEntity, fmt.Errorf("failed to verify token: %v", err))
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok && !token.Valid {
 			return s.Respond(c, http.StatusUnauthorized, err.Error())
 		}
-		// TODO, this need to be verified once we can see which claims we get in the request.
-		fmt.Println("got claims: ", claims)
-		if claims["referenceId"] != nil {
-			log.Warn("missing claim...")
+		if claims["referenceId"] != req.ReferenceId {
+			return s.Respond(c, http.StatusConflict, fmt.Errorf("failed to validate claim payload"))
 		}
+
 		signedToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 			"jti":     uuid.New(),
-			"iss":     hmacSecret,
+			"iss":     s.Shopify.ApiKey,
 			"iat":     time.Now().UTC().UnixNano() / 1e6,
 			"sub":     req.ReferenceId, // TODO verify that referenceID is the same as in the claim["decodedToken.input_data.initialPurchase.referenceId"]",
 			"changes": req.Changes,
@@ -113,8 +112,9 @@ func (s *Server) handleSignChangeSet() echo.HandlerFunc {
 		// Sign and get the complete encoded token as a string using the secret
 		tokenString, err := signedToken.SignedString(hmacSecret)
 		if err != nil {
-			return s.Respond(c, http.StatusInternalServerError, err.Error())
+			return s.Respond(c, http.StatusInternalServerError, fmt.Errorf("failed to sign the request: %v", err))
 		}
 		return s.Respond(c, http.StatusOK, signResponse{Token: tokenString})
+
 	}
 }
