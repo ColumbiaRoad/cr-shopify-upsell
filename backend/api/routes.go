@@ -15,8 +15,9 @@ func (s *Server) Routes() {
 	v1 := s.Router.Group("/v1")
 	// Swagger docs
 	v1.GET("/docs/*", echoSwagger.WrapHandler)
-	v1.GET("/shopify/", s.handleShopify())
+	v1.GET("/shopify", s.handleShopify())
 	v1.GET("/shopify/callback", s.handleCallback())
+	v1.GET("/shopify/billing/create", s.handleCreateRecurringApplicationCharge())
 	v1.GET("/offer", s.handleOffer())
 	v1.POST("/sign-changeset", s.handleSignChangeSet())
 }

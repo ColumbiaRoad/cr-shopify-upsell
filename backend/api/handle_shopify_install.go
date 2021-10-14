@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/shopspring/decimal"
+
 	goshopify "github.com/bold-commerce/go-shopify"
 
 	"github.com/labstack/gommon/log"
@@ -75,7 +77,6 @@ func (s *Server) handleCallback() echo.HandlerFunc {
 			return s.Respond(c, http.StatusBadRequest, ErrorResponse{Error: errValue})
 		}
 		shopifyClient := goshopify.NewClient(*s.Shopify, shopURL, accessToken)
-
 		img := goshopify.Image{
 			Src: productImageURL,
 		}
@@ -97,7 +98,46 @@ func (s *Server) handleCallback() echo.HandlerFunc {
 			log.Warn(err)
 			return s.Respond(c, http.StatusInternalServerError, ErrorResponse{Error: "failed to persist product variant"})
 		}
-		returnURL := AppURL + "/v1/shopify/?" + c.Request().URL.RawQuery
+		returnURL := AppURL + "/v1/shopify?" + c.Request().URL.RawQuery
 		return s.Redirect(c, http.StatusSeeOther, returnURL)
+	}
+}
+
+// @Summary Initiate shopify billing
+// @Description Setup a application charge and redirect the merchant to the Shopify billing approval page
+// @Accept html
+// @Produce html
+// @Success 303
+// @Router /v1/shopify/billing/create [post]
+// @Tags shopify
+func (s *Server) handleCreateRecurringApplicationCharge() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		shopURL := c.QueryParams().Get("shop")
+		ctx := c.Request().Context()
+		profile, err := s.Merchant.GetShopByURL(ctx, shopURL)
+		if err != nil {
+			if err.Error() != "no rows in result set" {
+				log.Errorf("failed to check profile: %v", err)
+				return s.Respond(c, http.StatusBadRequest, "error when checking for profile:")
+			}
+		}
+		shopifyClient := goshopify.NewClient(*s.Shopify, profile.ShopURL, profile.AccessToken)
+		cappedAmount := decimal.NewFromInt(10000)
+		price := decimal.NewFromInt(0)
+		testCharge := true
+		var appCharge = goshopify.RecurringApplicationCharge{
+			CappedAmount: &cappedAmount,
+			Price:        &price,
+			Name:         "Climate action",
+			ReturnURL:    AppURL + "/shopify/billing/return",
+			Terms:        "We will only charge you the amount you have already collected from your customer",
+			Test:         &testCharge,
+		}
+		chargeResponse, err := shopifyClient.RecurringApplicationCharge.Create(appCharge)
+		if err != nil {
+			log.Errorf("failed to initiate application charge: %v %v", err, chargeResponse)
+			return s.Respond(c, http.StatusBadRequest, "failed to initiate application charge:")
+		}
+		return s.Redirect(c, http.StatusSeeOther, chargeResponse.ConfirmationURL)
 	}
 }

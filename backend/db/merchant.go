@@ -49,8 +49,8 @@ func (db *Database) GetProfileByURL(ctx context.Context, shopURL string) (mercha
 	defer conn.Release()
 
 	row := conn.QueryRow(ctx,
-		`SELECT access_token FROM merchants WHERE shop_url = $1`, shopURL)
-	err = row.Scan(&profile.AccessToken)
+		`SELECT access_token, shop_url FROM merchants WHERE shop_url = $1`, shopURL)
+	err = row.Scan(&profile.AccessToken, &profile.ShopURL)
 	return profile, err
 }
 

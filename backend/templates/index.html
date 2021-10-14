@@ -27,6 +27,10 @@
             apiKey: apiKey,
             shopOrigin: '{{index . "shop"}}'
         });
+        var initBilling = function() {
+            console.log('url ', 'https://tacos.eu.ngrok.io/v1/shopify/billing/create?shop={{index . "shop"}}')
+            window.location.replace = 'https://tacos.eu.ngrok.io/v1/shopify/billing/create?shop={{index . "shop"}}';
+        }
     </script>
     <style>
         .mt {
@@ -48,7 +52,7 @@
             <div class="card-body">
                 <h3>Find me a taco</h3>
                 <p>We love tacos and believe your should eat them all the time.</p>
-                <p><button type="button" class="btn btn-primary" onclick="getTaco()">Tell me which taco I should eat</button></p>
+                <p><button type="button" class="btn btn-primary" onclick="initBilling()">Setup subscription</button></p>
                 <p class="display-3" id="tacoText"></p>
             </div>
         </div>
