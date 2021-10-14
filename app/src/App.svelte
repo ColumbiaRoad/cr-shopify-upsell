@@ -5,12 +5,8 @@
 	export let subscribed;
 </script>
 
-<main>
-	{#if subscribed}
-		<Dashboard />
-	{:else}
-		<Onboarding />
-	{/if}
-</main>
-
-
+{#if subscribed}
+	<Dashboard />
+{:else}
+	<Onboarding />
+{/if}
