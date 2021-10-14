@@ -25,6 +25,8 @@
             apiKey: apiKey,
             shopOrigin: '{{index . "shop"}}'
         });
+
+        window['subscribed'] = '{{index . "subscribed"}}' === 'true';
     </script>
 
 	<script defer src='/build/bundle.js'></script>
