@@ -67,7 +67,6 @@ func New(apiKey, apiSecret, backendURL string) *Server {
 	s := server.New()
 
 	s.Router.Static("/build", templatePath + "/build")
-	s.Router.Static("/global.css", templatePath + "/global.css")
 
 	s.Router.Renderer = t
 	return &Server{
