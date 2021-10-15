@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/shopspring/decimal"
 
@@ -103,16 +104,23 @@ func (s *Server) handleCallback() echo.HandlerFunc {
 	}
 }
 
+type Response struct {
+	ConfirmationURL string `json:"return_url"`
+}
+
 // @Summary Initiate shopify billing
 // @Description Setup a application charge and redirect the merchant to the Shopify billing approval page
 // @Accept html
 // @Produce html
-// @Success 303
+// @Success 200 {object} Response "ok"
 // @Router /v1/shopify/billing/create [post]
 // @Tags shopify
 func (s *Server) handleCreateRecurringApplicationCharge() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		shopURL := c.QueryParams().Get("shop")
+		if shopURL == "" {
+			return s.Respond(c, http.StatusBadRequest, "missing parameter: shop")
+		}
 		ctx := c.Request().Context()
 		profile, err := s.Merchant.GetShopByURL(ctx, shopURL)
 		if err != nil {
@@ -129,8 +137,8 @@ func (s *Server) handleCreateRecurringApplicationCharge() echo.HandlerFunc {
 			CappedAmount: &cappedAmount,
 			Price:        &price,
 			Name:         "Climate action",
-			ReturnURL:    AppURL + "/shopify/billing/return",
-			Terms:        "We will only charge you the amount you have already collected from your customer",
+			ReturnURL:    AppURL + "/v1/shopify/billing/return?shop=" + shopURL,
+			Terms:        "We will only charge you the amount you have already collected from your customers",
 			Test:         &testCharge,
 		}
 		chargeResponse, err := shopifyClient.RecurringApplicationCharge.Create(appCharge)
@@ -138,6 +146,53 @@ func (s *Server) handleCreateRecurringApplicationCharge() echo.HandlerFunc {
 			log.Errorf("failed to initiate application charge: %v %v", err, chargeResponse)
 			return s.Respond(c, http.StatusBadRequest, "failed to initiate application charge:")
 		}
-		return s.Redirect(c, http.StatusSeeOther, chargeResponse.ConfirmationURL)
+		return s.Respond(c, http.StatusOK, Response{ConfirmationURL: chargeResponse.ConfirmationURL})
+	}
+}
+
+// @Summary Complete shopify billing
+// @Description Handle the callback from Shopify when a merchant accepts the billing charges
+// @Accept html
+// @Produce html
+// @Success 303
+// @Router /v1/shopify/billing/return [get]
+// @Tags shopify
+func (s *Server) handleCompleteRecurringApplicationCharge() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		shopURL := c.QueryParams().Get("shop")
+		chargeIDParam := c.QueryParams().Get("charge_id")
+
+		if shopURL == "" {
+			return s.Respond(c, http.StatusBadRequest, "missing parameter: shop")
+		}
+		if chargeIDParam == "" {
+			return s.Respond(c, http.StatusBadRequest, "missing parameter: charge_id")
+		}
+		chargeID, err := strconv.ParseInt(chargeIDParam, 10, 64)
+
+		ctx := c.Request().Context()
+		profile, err := s.Merchant.GetShopByURL(ctx, shopURL)
+		if err != nil {
+			if err.Error() != "no rows in result set" {
+				log.Errorf("failed to check profile: %v", err)
+				return s.Respond(c, http.StatusBadRequest, "error when checking for profile:")
+			}
+		}
+		shopifyClient := goshopify.NewClient(*s.Shopify, profile.ShopURL, profile.AccessToken)
+
+		charge, err := shopifyClient.RecurringApplicationCharge.Get(chargeID, nil)
+		if err != nil {
+			log.Errorf("failed to get application charge: %v: charge_id: %i", err, chargeID)
+			return s.Respond(c, http.StatusBadRequest, "failed to activate application charge:")
+		}
+		activateChargeResponse, err := shopifyClient.RecurringApplicationCharge.Activate(*charge)
+		if err != nil {
+			log.Errorf("failed to activate application charge: %v %v", err, activateChargeResponse)
+			return s.Respond(c, http.StatusBadRequest, "failed to activate application charge:")
+		}
+		return c.Render(http.StatusOK, "success.html", map[string]interface{}{
+			"subscription_id": activateChargeResponse.ID,
+		})
+
 	}
 }

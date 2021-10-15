@@ -18,6 +18,7 @@ func (s *Server) Routes() {
 	v1.GET("/shopify", s.handleShopify())
 	v1.GET("/shopify/callback", s.handleCallback())
 	v1.GET("/shopify/billing/create", s.handleCreateRecurringApplicationCharge())
+	v1.GET("/shopify/billing/return", s.handleCompleteRecurringApplicationCharge())
 	v1.GET("/offer", s.handleOffer())
 	v1.POST("/sign-changeset", s.handleSignChangeSet())
 }
