@@ -10,6 +10,7 @@ type Storage interface {
 	GetProfileByURL(ctx context.Context, shopURL string) (Profile, error)
 	AddVariantID(ctx context.Context, shopURL string, variantID int64) (int64, error)
 	GetProductVariantID(ctx context.Context, shopURL string) (int64, error)
+	SaveSubscriptionID(ctx context.Context, shopURL string, subscriptionID int64) error
 }
 
 type merchant struct {
@@ -29,6 +30,7 @@ type Merchants interface {
 	AddVariantID(ctx context.Context, shopURL string, variantID int64) (int64, error)
 	GetVariantIDForShop(ctx context.Context, shopURL string) (variantID int64, err error)
 	GetShopByURL(ctx context.Context, shopURL string) (Profile, error)
+	AddSubscriptionID(ctx context.Context, shopURL string, subscriptionID int64) error
 }
 
 // HandleInstall makes it possible to add or update the merchants shopify access token
@@ -61,4 +63,10 @@ func (m *merchant) GetVariantIDForShop(ctx context.Context, shopURL string) (var
 // GetShopByURL returns a Profile for the shop if found
 func (m *merchant) GetShopByURL(ctx context.Context, shopURL string) (Profile, error) {
 	return m.storage.GetProfileByURL(ctx, shopURL)
+}
+
+// AddSubscriptionID to a merchant profile
+func (m *merchant) AddSubscriptionID(ctx context.Context, shopURL string, subscriptionID int64) error {
+	err := m.storage.SaveSubscriptionID(ctx, shopURL, subscriptionID)
+	return err
 }

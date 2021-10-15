@@ -2,7 +2,7 @@
 
 -- Setting up tables IF not already created
 ALTER TABLE "merchants" ADD COLUMN IF NOT EXISTS
-    "subscription_id"   TEXT NULL;
+    "subscription_id"   BIGINT DEFAULT 0;
 ALTER TABLE "merchants" ADD COLUMN IF NOT EXISTS
     "accepted_terms_at" TIMESTAMP WITH TIME ZONE;
 

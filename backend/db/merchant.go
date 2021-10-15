@@ -49,8 +49,8 @@ func (db *Database) GetProfileByURL(ctx context.Context, shopURL string) (mercha
 	defer conn.Release()
 
 	row := conn.QueryRow(ctx,
-		`SELECT access_token, shop_url FROM merchants WHERE shop_url = $1`, shopURL)
-	err = row.Scan(&profile.AccessToken, &profile.ShopURL)
+		`SELECT access_token, shop_url, subscription_id FROM merchants WHERE shop_url = $1`, shopURL)
+	err = row.Scan(&profile.AccessToken, &profile.ShopURL, &profile.SubscriptionID)
 	return profile, err
 }
 
@@ -106,5 +106,23 @@ func (db *Database) GetProductVariantID(ctx context.Context, shopURL string) (va
 		return variantID, err
 	}
 	return variantID, err
+
+}
+
+// SaveSubscriptionID persist a subscription id to a merchant profile
+func (db *Database) SaveSubscriptionID(ctx context.Context, shopURL string, subscriptionID int64) error {
+	conn, err := db.Conn(ctx)
+	if err != nil {
+		return err
+	}
+	var merchantID int64
+	defer conn.Release()
+	row := conn.QueryRow(ctx,
+		`UPDATE merchants SET (updated_at, subscription_id) = (current_timestamp, $2)
+			WHERE shop_url = $1
+			RETURNING id`, shopURL, subscriptionID)
+
+	err = row.Scan(&merchantID)
+	return err
 
 }

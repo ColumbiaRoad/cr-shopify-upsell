@@ -129,6 +129,9 @@ func (s *Server) handleCreateRecurringApplicationCharge() echo.HandlerFunc {
 				return s.Respond(c, http.StatusBadRequest, "error when checking for profile:")
 			}
 		}
+		if profile.SubscriptionID > 0 {
+			return s.Respond(c, http.StatusOK, fmt.Sprintf("subscription already exists with id: %d", profile.SubscriptionID))
+		}
 		shopifyClient := goshopify.NewClient(*s.Shopify, profile.ShopURL, profile.AccessToken)
 		cappedAmount := decimal.NewFromInt(10000)
 		price := decimal.NewFromInt(0)
@@ -154,7 +157,7 @@ func (s *Server) handleCreateRecurringApplicationCharge() echo.HandlerFunc {
 // @Description Handle the callback from Shopify when a merchant accepts the billing charges
 // @Accept html
 // @Produce html
-// @Success 303
+// @Success 200
 // @Router /v1/shopify/billing/return [get]
 // @Tags shopify
 func (s *Server) handleCompleteRecurringApplicationCharge() echo.HandlerFunc {
@@ -169,6 +172,9 @@ func (s *Server) handleCompleteRecurringApplicationCharge() echo.HandlerFunc {
 			return s.Respond(c, http.StatusBadRequest, "missing parameter: charge_id")
 		}
 		chargeID, err := strconv.ParseInt(chargeIDParam, 10, 64)
+		if err != nil {
+			return s.Respond(c, http.StatusBadRequest, fmt.Errorf("failed to get parse chargeID params: %v", err))
+		}
 
 		ctx := c.Request().Context()
 		profile, err := s.Merchant.GetShopByURL(ctx, shopURL)
@@ -190,9 +196,15 @@ func (s *Server) handleCompleteRecurringApplicationCharge() echo.HandlerFunc {
 			log.Errorf("failed to activate application charge: %v %v", err, activateChargeResponse)
 			return s.Respond(c, http.StatusBadRequest, "failed to activate application charge:")
 		}
-		return c.Render(http.StatusOK, "success.html", map[string]interface{}{
+		err = s.Merchant.AddSubscriptionID(ctx, shopURL, activateChargeResponse.ID)
+		if err != nil {
+			log.Errorf("failed to add subscription id to merchant: %s: subscription: %d error: %v", shopURL, activateChargeResponse.ID, err)
+			return c.Render(http.StatusOK, "subscription_failed.html", map[string]interface{}{
+				"subscription_id": activateChargeResponse.ID,
+			})
+		}
+		return c.Render(http.StatusOK, "subscription_success.html", map[string]interface{}{
 			"subscription_id": activateChargeResponse.ID,
 		})
-
 	}
 }
