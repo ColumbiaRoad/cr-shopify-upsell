@@ -16,6 +16,7 @@ func (s *Server) Routes() {
 	// Swagger docs
 	v1.GET("/docs/*", echoSwagger.WrapHandler)
 	v1.GET("/shopify", s.handleShopify())
+	v1.GET("/shopify/", s.handleShopify()) // Shopify calls both /shopify?data... and /shopify/?data...
 	v1.GET("/shopify/callback", s.handleCallback())
 	v1.GET("/shopify/billing/create", s.handleCreateRecurringApplicationCharge())
 	v1.GET("/shopify/billing/return", s.handleCompleteRecurringApplicationCharge())

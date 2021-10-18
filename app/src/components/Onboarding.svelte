@@ -14,15 +14,15 @@
         loading.dispatch(Loading.Action.START);
         
 
-        redirect.dispatch(Redirect.Action.REMOTE, 'http://example.com');
+        //redirect.dispatch(Redirect.Action.REMOTE, 'http://example.com');
 
-        // fetch(billingEndpoint)
-        //     .then((response) => response.json())
-        //     .then((json) => {
-        //         characterName = character.name;
-        //     })
-        //     .catch((e) => console.error) // TODO handle loading, error state
-        //     //.finally(() => );
+        fetch(`${billingEndpoint}?shop=${window['shop']}`)
+            .then((response) => response.json())
+            .then((json) => {
+                redirect.dispatch(Redirect.Action.REMOTE, json.return_url);
+            })
+            .catch((e) => console.error) // TODO handle loading, error state
+            //.finally(() => );
     };
 </script>
 

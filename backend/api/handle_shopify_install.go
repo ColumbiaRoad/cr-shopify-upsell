@@ -43,10 +43,11 @@ func (s *Server) handleShopify() echo.HandlerFunc {
 			authUrl := s.Shopify.AuthorizeUrl(shopName, state)
 			return s.Redirect(c, http.StatusFound, authUrl)
 		}
+
 		return c.Render(http.StatusOK, "index.html", map[string]interface{}{
 			"shop":   shopName,
 			"apiKey": s.Shopify.ApiKey,
-			"subscribed": false, // TODO: get from db
+			"subscribed": profile.SubscriptionID != 0,
 		})
 
 	}
@@ -200,12 +201,19 @@ func (s *Server) handleCompleteRecurringApplicationCharge() echo.HandlerFunc {
 		err = s.Merchant.AddSubscriptionID(ctx, shopURL, activateChargeResponse.ID)
 		if err != nil {
 			log.Errorf("failed to add subscription id to merchant: %s: subscription: %d error: %v", shopURL, activateChargeResponse.ID, err)
-			return c.Render(http.StatusOK, "subscription_failed.html", map[string]interface{}{
-				"subscription_id": activateChargeResponse.ID,
-			})
+			// return c.Render(http.StatusOK, "subscription_failed.html", map[string]interface{}{
+			// 	"subscription_id": activateChargeResponse.ID,
+			// })
 		}
-		return c.Render(http.StatusOK, "subscription_success.html", map[string]interface{}{
-			"subscription_id": activateChargeResponse.ID,
+
+		// return c.Render(http.StatusOK, "subscription_success.html", map[string]interface{}{
+		// 	"subscription_id": activateChargeResponse.ID,
+		// })
+
+		return c.Render(http.StatusOK, "index.html", map[string]interface{}{
+			"shop":   shopURL,
+			"apiKey": s.Shopify.ApiKey,
+			"subscribed": err == nil,
 		})
 	}
 }
