@@ -5,7 +5,7 @@
     <meta charset='utf-8'>
     <meta name='viewport' content='width=device-width,initial-scale=1'>
 
-    <title>Svelte app</title>
+    <title>Climate action</title>
 
     <link rel='stylesheet' href='/build/global.css'>
     <link rel='stylesheet' href='/build/bundle.css'>
@@ -25,6 +25,7 @@
             shopOrigin: '{{index . "shop"}}'
         });
 
+        window['shop'] = '{{index . "shop"}}'
         window['app'] = app
         window['subscribed'] = '{{index . "subscribed"}}' === 'true';
     </script>
