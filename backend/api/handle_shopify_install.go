@@ -43,7 +43,7 @@ func (s *Server) handleShopify() echo.HandlerFunc {
 		return c.Render(http.StatusOK, "index.html", map[string]interface{}{
 			"shop":   shopName,
 			"apiKey": s.Shopify.ApiKey,
-			"subscribed": true, // TODO: get from db
+			"subscribed": false, // TODO: get from db
 		})
 
 	}
