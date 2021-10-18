@@ -3,6 +3,9 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"strconv"
+
+	"github.com/shopspring/decimal"
 
 	goshopify "github.com/bold-commerce/go-shopify"
 
@@ -76,7 +79,6 @@ func (s *Server) handleCallback() echo.HandlerFunc {
 			return s.Respond(c, http.StatusBadRequest, ErrorResponse{Error: errValue})
 		}
 		shopifyClient := goshopify.NewClient(*s.Shopify, shopURL, accessToken)
-
 		img := goshopify.Image{
 			Src: productImageURL,
 		}
@@ -98,7 +100,112 @@ func (s *Server) handleCallback() echo.HandlerFunc {
 			log.Warn(err)
 			return s.Respond(c, http.StatusInternalServerError, ErrorResponse{Error: "failed to persist product variant"})
 		}
-		returnURL := AppURL + "/v1/shopify/?" + c.Request().URL.RawQuery
+		returnURL := AppURL + "/v1/shopify?" + c.Request().URL.RawQuery
 		return s.Redirect(c, http.StatusSeeOther, returnURL)
+	}
+}
+
+type Response struct {
+	ConfirmationURL string `json:"return_url"`
+}
+
+// @Summary Initiate shopify billing
+// @Description Setup a application charge and redirect the merchant to the Shopify billing approval page
+// @Accept html
+// @Produce html
+// @Success 200 {object} Response "ok"
+// @Router /v1/shopify/billing/create [post]
+// @Tags shopify
+func (s *Server) handleCreateRecurringApplicationCharge() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		shopURL := c.QueryParams().Get("shop")
+		if shopURL == "" {
+			return s.Respond(c, http.StatusBadRequest, "missing parameter: shop")
+		}
+		ctx := c.Request().Context()
+		profile, err := s.Merchant.GetShopByURL(ctx, shopURL)
+		if err != nil {
+			if err.Error() != "no rows in result set" {
+				log.Errorf("failed to check profile: %v", err)
+				return s.Respond(c, http.StatusBadRequest, "error when checking for profile:")
+			}
+		}
+		if profile.SubscriptionID > 0 {
+			return s.Respond(c, http.StatusOK, fmt.Sprintf("subscription already exists with id: %d", profile.SubscriptionID))
+		}
+		shopifyClient := goshopify.NewClient(*s.Shopify, profile.ShopURL, profile.AccessToken)
+		cappedAmount := decimal.NewFromInt(10000)
+		price := decimal.NewFromInt(0)
+		testCharge := true
+		var appCharge = goshopify.RecurringApplicationCharge{
+			CappedAmount: &cappedAmount,
+			Price:        &price,
+			Name:         "Climate action",
+			ReturnURL:    AppURL + "/v1/shopify/billing/return?shop=" + shopURL,
+			Terms:        "We will only charge you the amount you have already collected from your customers",
+			Test:         &testCharge,
+		}
+		chargeResponse, err := shopifyClient.RecurringApplicationCharge.Create(appCharge)
+		if err != nil {
+			log.Errorf("failed to initiate application charge: %v %v", err, chargeResponse)
+			return s.Respond(c, http.StatusBadRequest, "failed to initiate application charge:")
+		}
+		return s.Respond(c, http.StatusOK, Response{ConfirmationURL: chargeResponse.ConfirmationURL})
+	}
+}
+
+// @Summary Complete shopify billing
+// @Description Handle the callback from Shopify when a merchant accepts the billing charges
+// @Accept html
+// @Produce html
+// @Success 200
+// @Router /v1/shopify/billing/return [get]
+// @Tags shopify
+func (s *Server) handleCompleteRecurringApplicationCharge() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		shopURL := c.QueryParams().Get("shop")
+		chargeIDParam := c.QueryParams().Get("charge_id")
+
+		if shopURL == "" {
+			return s.Respond(c, http.StatusBadRequest, "missing parameter: shop")
+		}
+		if chargeIDParam == "" {
+			return s.Respond(c, http.StatusBadRequest, "missing parameter: charge_id")
+		}
+		chargeID, err := strconv.ParseInt(chargeIDParam, 10, 64)
+		if err != nil {
+			return s.Respond(c, http.StatusBadRequest, fmt.Errorf("failed to get parse chargeID params: %v", err))
+		}
+
+		ctx := c.Request().Context()
+		profile, err := s.Merchant.GetShopByURL(ctx, shopURL)
+		if err != nil {
+			if err.Error() != "no rows in result set" {
+				log.Errorf("failed to check profile: %v", err)
+				return s.Respond(c, http.StatusBadRequest, "error when checking for profile:")
+			}
+		}
+		shopifyClient := goshopify.NewClient(*s.Shopify, profile.ShopURL, profile.AccessToken)
+
+		charge, err := shopifyClient.RecurringApplicationCharge.Get(chargeID, nil)
+		if err != nil {
+			log.Errorf("failed to get application charge: %v: charge_id: %i", err, chargeID)
+			return s.Respond(c, http.StatusBadRequest, "failed to activate application charge:")
+		}
+		activateChargeResponse, err := shopifyClient.RecurringApplicationCharge.Activate(*charge)
+		if err != nil {
+			log.Errorf("failed to activate application charge: %v %v", err, activateChargeResponse)
+			return s.Respond(c, http.StatusBadRequest, "failed to activate application charge:")
+		}
+		err = s.Merchant.AddSubscriptionID(ctx, shopURL, activateChargeResponse.ID)
+		if err != nil {
+			log.Errorf("failed to add subscription id to merchant: %s: subscription: %d error: %v", shopURL, activateChargeResponse.ID, err)
+			return c.Render(http.StatusOK, "subscription_failed.html", map[string]interface{}{
+				"subscription_id": activateChargeResponse.ID,
+			})
+		}
+		return c.Render(http.StatusOK, "subscription_success.html", map[string]interface{}{
+			"subscription_id": activateChargeResponse.ID,
+		})
 	}
 }

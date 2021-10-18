@@ -28,6 +28,7 @@ type testMerchant struct {
 	addVariantID        func(ctx context.Context, shopURL string, variantID int64) (int64, error)
 	getVariantIDForShop func(ctx context.Context, shopURL string) (variantID int64, err error)
 	getProfileByURL     func(ctx context.Context, shopURL string) (merchant.Profile, error)
+	addSubscriptionID   func(ctx context.Context, shopURL string, subscriptionID int64) error
 }
 
 func setTestFixture() *fixture {
@@ -55,4 +56,8 @@ func (m *testMerchant) GetVariantIDForShop(ctx context.Context, shopURL string) 
 }
 func (m *testMerchant) GetShopByURL(ctx context.Context, shopURL string) (profile merchant.Profile, err error) {
 	return m.getProfileByURL(ctx, shopURL)
+}
+
+func (m *testMerchant) AddSubscriptionID(ctx context.Context, shopURL string, subscriptionID int64) error {
+	return m.addSubscriptionID(ctx, shopURL, subscriptionID)
 }

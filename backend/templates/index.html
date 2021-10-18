@@ -24,7 +24,10 @@
             apiKey: apiKey,
             shopOrigin: '{{index . "shop"}}'
         });
-
+        var initBilling = function() {
+            console.log('url ', 'https://tacos.eu.ngrok.io/v1/shopify/billing/create?shop={{index . "shop"}}')
+            window.location.replace = 'https://tacos.eu.ngrok.io/v1/shopify/billing/create?shop={{index . "shop"}}';
+        }
         window['subscribed'] = '{{index . "subscribed"}}' === 'true';
     </script>
 
@@ -32,6 +35,24 @@
 </head>
 
 <body>
+<main class="container">
+    <div style="margin-top:40px">
+        <div class="display-3" id="shop-url">You made it! 🥳 </div>
+        <p class="mt">This page is using the <a href="https://github.com/ablesense/bootstrap-polaris" target="_blank">Bootstrap Polaris theme</a> which gives you the things you need to adhere to the Polaris style guide required by Shopify.</p>
+        <p class="mt">You can use whatever tools you like to create the app, there are some decent guides out there for React and other frameworks. </p>
+        <p class="mt">{{index . "shop"}}, {{index . "apiKey"}}</p>
+    </div>
+    <div style="margin-top:50px; margin-bottom: 100px">
+        <div class="card">
+            <div class="card-body">
+                <h3>Find me a taco</h3>
+                <p>We love tacos and believe your should eat them all the time.</p>
+                <p><button type="button" class="btn btn-primary" onclick="initBilling()">Setup subscription</button></p>
+                <p class="display-3" id="tacoText"></p>
+            </div>
+        </div>
+    </div>
+</main>
 </body>
 
 </html>

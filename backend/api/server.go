@@ -41,7 +41,7 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 var AppURL string
 
 // New creates a new Server with an HTTP Router
-// @title Carbon offset - Shopify upsell extension
+// @title Climate action - Shopify upsell extension
 // @version 1.0
 // @description Enable merchants to help fight climate change
 // @termsOfService http://swagger.io/terms/
