@@ -21,6 +21,11 @@ type Offer struct {
 	DiscountedPrice    int    `json:"discountedPrice"`
 }
 
+type RenderOffer struct {
+	Offer
+	ShouldRender	bool
+  }
+
 type signParams struct {
 	ReferenceId string `json:"referenceId"`
 	Changes     []struct {
@@ -62,12 +67,21 @@ func (s *Server) handleOffer() echo.HandlerFunc {
 		if variantID == 0 {
 			return s.Respond(c, http.StatusNotFound, ErrorResponse{Error: "could not find shop"})
 		}
-		responseBody := Offer{
-			VariantId:          variantID,
-			ProductTitle:       "🌍 Take climate action!",
-			ProductImageURL:    "https://source.unsplash.com/aL7SA1ASVdQ/800x800",
-			ProductDescription: "You can help make a difference by making a small donation to help fight climate change!",
+
+		profile, err := s.Merchant.GetShopByURL(ctx, shopURL)
+		if err != nil {
+			if err.Error() != "no rows in result set" {
+				return s.Respond(c, http.StatusBadRequest, "error when checking for profile:")
+			}
 		}
+
+		responseBody := RenderOffer{}
+		responseBody.VariantId = variantID
+		responseBody.ProductTitle = "🌍 Take climate action!"
+		responseBody.ProductImageURL = "https://source.unsplash.com/aL7SA1ASVdQ/800x800"
+		responseBody.ProductDescription = "You can help make a difference by making a small donation to help fight climate change!"
+		responseBody.ShouldRender = profile.ShouldRender
+
 		return s.Respond(c, http.StatusOK, responseBody)
 	}
 }

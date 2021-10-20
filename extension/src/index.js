@@ -28,7 +28,7 @@ extend('Checkout::PostPurchase::ShouldRender', async ({ storage, inputData }) =>
     `${BACKEND_URL}/offer?shop=` + inputData.shop.domain,
   ).then((res) => res.json());
   await storage.update(postPurchaseOffer);
-  return { render: true };
+  return { render: postPurchaseOffer.ShouldRender };
 });
 
 
