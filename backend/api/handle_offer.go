@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	"encoding/json"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
@@ -32,6 +33,11 @@ type signParams struct {
 
 type signResponse struct {
 	Token string `json:"token"`
+}
+
+type updateShouldRenderBody struct {
+	ShopURL	string `json:"shopURL"`
+	ShouldRender bool `json:"shouldRender"`
 }
 
 // @Summary Returns the upsell offer product
@@ -115,5 +121,33 @@ func (s *Server) handleSignChangeSet() echo.HandlerFunc {
 			return s.Respond(c, http.StatusInternalServerError, fmt.Errorf("failed to sign the request: %v", err))
 		}
 		return s.Respond(c, http.StatusOK, signResponse{Token: tokenString})
+	}
+}
+
+
+// @Summary Updates should_render
+// @Description Used by the extension to render conditionally
+// @Accept json
+// @Param request body updateShouldRenderBody true "Required data to update the field"
+// @Produce json
+// @Success 200 "ok"
+// @Router /v1/should-render [patch]
+// @Tags offer
+func (s *Server) handleUpdateShouldRender() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		ctx := c.Request().Context()
+
+		var jsonReponse updateShouldRenderBody 
+		err := json.NewDecoder(c.Request().Body).Decode(&jsonReponse)
+		if err != nil {
+			return s.Respond(c, http.StatusNotFound, ErrorResponse{Error: "could not find shopURL or shouldRender in body"})
+		} 
+
+		err = s.Merchant.UpdateShouldRenderForShop(ctx, jsonReponse.ShopURL, jsonReponse.ShouldRender)
+		if err != nil {
+			return s.Respond(c, http.StatusInternalServerError, fmt.Errorf("failed to update: %v", err))
+		}
+
+		return s.Respond(c, http.StatusOK, nil)
 	}
 }

@@ -126,3 +126,20 @@ func (db *Database) SaveSubscriptionID(ctx context.Context, shopURL string, subs
 	return err
 
 }
+
+// Updates the value of should_render, used by the extension to render conditionally
+func (db *Database) UpdateShouldRender(ctx context.Context, shopURL string, shouldRender bool) error {
+	conn, err := db.Conn(ctx)
+	if err != nil {
+		return err
+	}
+	var merchantID int64
+	defer conn.Release()
+	row := conn.QueryRow(ctx,
+		`UPDATE merchants SET (updated_at, should_render) = (current_timestamp, $2)
+			WHERE shop_url = $1
+			RETURNING id`, shopURL, shouldRender)
+
+	err = row.Scan(&merchantID)
+	return err
+}
