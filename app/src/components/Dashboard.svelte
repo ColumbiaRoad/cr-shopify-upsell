@@ -1,22 +1,21 @@
 <script>
     const updateStatusEndpoint = "/v1/should-render";
 
-    export let extentionEnabled;
+    export let extensionEnabled;
 
     const handleStatusToggle = () => {
         fetch(updateStatusEndpoint, {
             method: "PATCH",
             body: JSON.stringify({
                 shopURL: window['shop'],
-                shouldRender: !extentionEnabled
+                shouldRender: !extensionEnabled
             }),
             headers: {
                 "Content-type": "application/json",
             },
         })
             .then((response) => {
-                console.log(response)
-                extentionEnabled = !extentionEnabled
+                extensionEnabled = !extensionEnabled
             })
             .catch(e => console.error(e))
     };
@@ -33,7 +32,7 @@
                     <div class="statusInnerContainer">
                         <p>
                             The extension <strong
-                                >is{#if !extentionEnabled}&nbsp;not{/if} showing</strong
+                                >is{#if !extensionEnabled}&nbsp;not{/if} showing</strong
                             > in your checkout pages
                         </p>
                         <div>
@@ -41,7 +40,7 @@
                                 href="#"
                                 on:click|preventDefault={handleStatusToggle}
                                 class="btn btn-primary"
-                                >{#if extentionEnabled}Disable{:else}Enable{/if}</a
+                                >{#if extensionEnabled}Disable{:else}Enable{/if}</a
                             >
                         </div>
                     </div>
