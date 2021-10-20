@@ -1,28 +1,23 @@
 <script>
     const billingEndpoint = "/v1/shopify/billing/create";
 
-    const Loading = window['app-bridge'].actions.Loading
-    const loading = Loading.create(window['app']);
+    const Loading = window["app-bridge"].actions.Loading;
+    const loading = Loading.create(window["app"]);
 
-    const Redirect = window['app-bridge'].actions.Redirect
-    const redirect = Redirect.create(window['app']);
-
+    const Redirect = window["app-bridge"].actions.Redirect;
+    const redirect = Redirect.create(window["app"]);
 
     const handleClick = () => {
-        
         console.log(loading, Loading, Loading.Action.START);
         loading.dispatch(Loading.Action.START);
-        
 
-        //redirect.dispatch(Redirect.Action.REMOTE, 'http://example.com');
-
-        fetch(`${billingEndpoint}?shop=${window['shop']}`)
+        fetch(`${billingEndpoint}?shop=${window["shop"]}`)
             .then((response) => response.json())
             .then((json) => {
                 redirect.dispatch(Redirect.Action.REMOTE, json.return_url);
             })
-            .catch((e) => console.error) // TODO handle loading, error state
-            //.finally(() => );
+            .catch((e) => console.error(e)); // TODO handle loading, error state
+        //.finally(() => );
     };
 </script>
 

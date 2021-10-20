@@ -3,10 +3,11 @@
 	import Dashboard from "./components/Dashboard.svelte";
 
 	export let subscribed;
+	export let extentionEnabled;
 </script>
 
 {#if subscribed}
-	<Dashboard />
+	<Dashboard extentionEnabled={extentionEnabled} />
 {:else}
 	<Onboarding />
 {/if}

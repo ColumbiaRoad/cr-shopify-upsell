@@ -48,6 +48,7 @@ func (s *Server) handleShopify() echo.HandlerFunc {
 			"shop":   shopName,
 			"apiKey": s.Shopify.ApiKey,
 			"subscribed": profile.SubscriptionID != 0,
+			"extensionEnabled": profile.ShouldRender,
 		})
 
 	}
@@ -209,6 +210,7 @@ func (s *Server) handleCompleteRecurringApplicationCharge() echo.HandlerFunc {
 			"shop":   shopURL,
 			"apiKey": s.Shopify.ApiKey,
 			"subscribed": err == nil,
+			"extensionEnabled": false, // Default value is false
 		})
 	}
 }

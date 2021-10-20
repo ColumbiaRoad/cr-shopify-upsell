@@ -26,8 +26,9 @@
         });
 
         window['shop'] = '{{index . "shop"}}'
+        window['extensionEnabled'] = '{{index . "extensionEnabled"}}' === 'true'
         window['app'] = app
-        window['subscribed'] = '{{index . "subscribed"}}' === 'true';
+        window['subscribed'] = '{{index . "subscribed"}}' === 'true'
     </script>
 
     <script defer src='/build/bundle.js'></script>

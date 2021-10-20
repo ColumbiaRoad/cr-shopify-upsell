@@ -1,8 +1,25 @@
-
 <script>
+    const updateStatusEndpoint = "/v1/should-render";
 
+    export let extentionEnabled;
 
-
+    const handleStatusToggle = () => {
+        fetch(updateStatusEndpoint, {
+            method: "PATCH",
+            body: JSON.stringify({
+                shopURL: window['shop'],
+                shouldRender: !extentionEnabled
+            }),
+            headers: {
+                "Content-type": "application/json",
+            },
+        })
+            .then((response) => {
+                console.log(response)
+                extentionEnabled = !extentionEnabled
+            })
+            .catch(e => console.error(e))
+    };
 </script>
 
 <main class="container">
@@ -15,11 +32,17 @@
                 <div class="card-body">
                     <div class="statusInnerContainer">
                         <p>
-                            The extension <strong>is showing</strong> in your checkout
-                            pages
+                            The extension <strong
+                                >is{#if !extentionEnabled}&nbsp;not{/if} showing</strong
+                            > in your checkout pages
                         </p>
                         <div>
-                            <a href="#" class="btn btn-primary">Disable</a>
+                            <a
+                                href="#"
+                                on:click|preventDefault={handleStatusToggle}
+                                class="btn btn-primary"
+                                >{#if extentionEnabled}Disable{:else}Enable{/if}</a
+                            >
                         </div>
                     </div>
                 </div>
@@ -56,11 +79,10 @@
     </div>
 </main>
 
-
 <style>
     .statusInnerContainer {
-        display: flex; 
-        justify-content:space-between;
+        display: flex;
+        justify-content: space-between;
         align-items: center;
     }
 
