@@ -7,8 +7,14 @@
     const Redirect = window["app-bridge"].actions.Redirect;
     const redirect = Redirect.create(window["app"]);
 
+    const Toast = window["app-bridge"].actions.Toast;
+    const toastOptions = {
+        message: "Couldn't redirect :(",
+        duration: 5000,
+    };
+    const toast = Toast.create(window["app"], toastOptions);
+
     const handleClick = () => {
-        console.log(loading, Loading, Loading.Action.START);
         loading.dispatch(Loading.Action.START);
 
         fetch(`${billingEndpoint}?shop=${window["shop"]}`)
@@ -16,8 +22,8 @@
             .then((json) => {
                 redirect.dispatch(Redirect.Action.REMOTE, json.return_url);
             })
-            .catch((e) => console.error(e)); // TODO handle loading, error state
-        //.finally(() => );
+            .catch(() => toast.dispatch(Toast.Action.SHOW)) 
+            .finally(() => loading.dispatch(Loading.Action.STOP));
     };
 </script>
 

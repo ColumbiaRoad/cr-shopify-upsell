@@ -1,23 +1,36 @@
 <script>
+    export let extensionEnabled;
+    
     const updateStatusEndpoint = "/v1/should-render";
 
-    export let extensionEnabled;
+    const Loading = window["app-bridge"].actions.Loading;
+    const loading = Loading.create(window["app"]);
+
+    const Toast = window["app-bridge"].actions.Toast;
+    const toastOptions = {
+        message: "Couldn't change the state :(",
+        duration: 5000,
+    };
+    const toast = Toast.create(window["app"], toastOptions);
 
     const handleStatusToggle = () => {
+        loading.dispatch(Loading.Action.START);
         fetch(updateStatusEndpoint, {
             method: "PATCH",
             body: JSON.stringify({
-                shopURL: window['shop'],
-                shouldRender: !extensionEnabled
+                shopURL: window["shop"],
+                shouldRender: !extensionEnabled,
             }),
             headers: {
                 "Content-type": "application/json",
             },
         })
             .then((response) => {
-                extensionEnabled = !extensionEnabled
+                if (!response.ok) throw new Error();
+                extensionEnabled = !extensionEnabled;
             })
-            .catch(e => console.error(e))
+            .catch(() => toast.dispatch(Toast.Action.SHOW)) 
+            .finally(() => loading.dispatch(Loading.Action.STOP));
     };
 </script>
 
