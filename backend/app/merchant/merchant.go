@@ -11,6 +11,7 @@ type Storage interface {
 	AddVariantID(ctx context.Context, shopURL string, variantID int64) (int64, error)
 	GetProductVariantID(ctx context.Context, shopURL string) (int64, error)
 	SaveSubscriptionID(ctx context.Context, shopURL string, subscriptionID int64) error
+	UpdateShouldRender(ctx context.Context, shopURL string, shouldRender bool) error
 }
 
 type merchant struct {
@@ -31,6 +32,7 @@ type Merchants interface {
 	GetVariantIDForShop(ctx context.Context, shopURL string) (variantID int64, err error)
 	GetShopByURL(ctx context.Context, shopURL string) (Profile, error)
 	AddSubscriptionID(ctx context.Context, shopURL string, subscriptionID int64) error
+	UpdateShouldRenderForShop(ctx context.Context, shopURL string, shouldRender bool) error
 }
 
 // HandleInstall makes it possible to add or update the merchants shopify access token
@@ -69,4 +71,8 @@ func (m *merchant) GetShopByURL(ctx context.Context, shopURL string) (Profile, e
 func (m *merchant) AddSubscriptionID(ctx context.Context, shopURL string, subscriptionID int64) error {
 	err := m.storage.SaveSubscriptionID(ctx, shopURL, subscriptionID)
 	return err
+}
+
+func (m *merchant) UpdateShouldRenderForShop(ctx context.Context, shopURL string, shouldRender bool) error {
+	return m.storage.UpdateShouldRender(ctx, shopURL, shouldRender)
 }

@@ -1,28 +1,29 @@
 <script>
     const billingEndpoint = "/v1/shopify/billing/create";
 
-    const Loading = window['app-bridge'].actions.Loading
-    const loading = Loading.create(window['app']);
+    const Loading = window["app-bridge"].actions.Loading;
+    const loading = Loading.create(window["app"]);
 
-    const Redirect = window['app-bridge'].actions.Redirect
-    const redirect = Redirect.create(window['app']);
+    const Redirect = window["app-bridge"].actions.Redirect;
+    const redirect = Redirect.create(window["app"]);
 
+    const Toast = window["app-bridge"].actions.Toast;
+    const toastOptions = {
+        message: "Couldn't redirect :(",
+        duration: 5000,
+    };
+    const toast = Toast.create(window["app"], toastOptions);
 
     const handleClick = () => {
-        
-        console.log(loading, Loading, Loading.Action.START);
         loading.dispatch(Loading.Action.START);
-        
 
-        //redirect.dispatch(Redirect.Action.REMOTE, 'http://example.com');
-
-        fetch(`${billingEndpoint}?shop=${window['shop']}`)
+        fetch(`${billingEndpoint}?shop=${window["shop"]}`)
             .then((response) => response.json())
             .then((json) => {
                 redirect.dispatch(Redirect.Action.REMOTE, json.return_url);
             })
-            .catch((e) => console.error) // TODO handle loading, error state
-            //.finally(() => );
+            .catch(() => toast.dispatch(Toast.Action.SHOW)) 
+            .finally(() => loading.dispatch(Loading.Action.STOP));
     };
 </script>
 

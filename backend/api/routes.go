@@ -22,4 +22,5 @@ func (s *Server) Routes() {
 	v1.GET("/shopify/billing/return", s.handleCompleteRecurringApplicationCharge())
 	v1.GET("/offer", s.handleOffer())
 	v1.POST("/sign-changeset", s.handleSignChangeSet())
+	v1.PATCH("/should-render", s.handleUpdateShouldRender())
 }

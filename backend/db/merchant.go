@@ -49,8 +49,8 @@ func (db *Database) GetProfileByURL(ctx context.Context, shopURL string) (mercha
 	defer conn.Release()
 
 	row := conn.QueryRow(ctx,
-		`SELECT access_token, shop_url, subscription_id FROM merchants WHERE shop_url = $1`, shopURL)
-	err = row.Scan(&profile.AccessToken, &profile.ShopURL, &profile.SubscriptionID)
+		`SELECT access_token, shop_url, subscription_id, should_render FROM merchants WHERE shop_url = $1`, shopURL)
+	err = row.Scan(&profile.AccessToken, &profile.ShopURL, &profile.SubscriptionID, &profile.ShouldRender)
 	return profile, err
 }
 
@@ -125,4 +125,21 @@ func (db *Database) SaveSubscriptionID(ctx context.Context, shopURL string, subs
 	err = row.Scan(&merchantID)
 	return err
 
+}
+
+// Updates the value of should_render, used by the extension to render conditionally
+func (db *Database) UpdateShouldRender(ctx context.Context, shopURL string, shouldRender bool) error {
+	conn, err := db.Conn(ctx)
+	if err != nil {
+		return err
+	}
+	var merchantID int64
+	defer conn.Release()
+	row := conn.QueryRow(ctx,
+		`UPDATE merchants SET (updated_at, should_render) = (current_timestamp, $2)
+			WHERE shop_url = $1
+			RETURNING id`, shopURL, shouldRender)
+
+	err = row.Scan(&merchantID)
+	return err
 }
