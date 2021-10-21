@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/ColumbiaRoad/cr-shopify-upsell/backend/app/merchant"
 	"github.com/ColumbiaRoad/cr-shopify-upsell/backend/lib/server/servertest"
 
 	"github.com/matryer/is"
@@ -18,9 +19,14 @@ func TestOffer(t *testing.T) {
 	fx.merchant.getVariantIDForShop = func(ctx context.Context, shopURL string) (int64, error) {
 		return 123123, nil
 	}
+	fx.merchant.getProfileByURL = func(ctx context.Context, shopURL string) (merchant.Profile, error) {
+		var testProfile merchant.Profile
+		testProfile.ShopURL = "offset-demo.myshopify.com"
+		return testProfile, nil
+	}
 	r := servertest.Get(fx.api, "/v1/offer?shop=offset-demo.myshopify.com")
 	is.Equal(r.Code, http.StatusOK)
-	var offerResponse Offer
+	var offerResponse RenderOffer
 	err := json.NewDecoder(r.Body).Decode(&offerResponse)
 	is.NoErr(err)
 	is.Equal(offerResponse.ProductTitle, "🌍 Take climate action!")
