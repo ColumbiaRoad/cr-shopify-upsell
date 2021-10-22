@@ -140,7 +140,7 @@ func (s *Server) handleSignChangeSet() echo.HandlerFunc {
 
 
 // @Summary Updates should_render
-// @Description Used by the extension to render conditionally
+// @Description Used by the admin app to make the extension to render conditionally
 // @Accept json
 // @Param request body updateShouldRenderBody true "Required data to update the field"
 // @Produce json
